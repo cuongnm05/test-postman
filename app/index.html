@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Cửa Hàng Trực Tuyến Demo</title>
+</head>
+<body>
+    <h1 id="welcome-title">Chào mừng đến với E-Shop</h1>
+    <button id="btn-shop-now">Xem Sản Phẩm</button>
+    <div id="product-list"></div>
+
+    <script>
+        document.getElementById('btn-shop-now').addEventListener('click', () => {
+            fetch('/api/products')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('product-list');
+                    list.innerHTML = data.map(p => `<p class="product-item">${p.name} - $${p.price}</p>`).join('');
+                });
+        });
+    </script>
+</body>
+</html>

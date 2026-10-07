@@ -1,0 +1,154 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "E-Commerce API Testing Suite",
+		"description": "Bộ ca kiểm thử tự động API E-Commerce bằng Postman",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "TC_API_01 - Lấy danh sách sản phẩm (GET)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code là 200 OK', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Thời gian phản hồi < 300ms', function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(300);",
+							"});",
+							"",
+							"pm.test('Dữ liệu trả về là mảng danh sách sản phẩm không rỗng', function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"    pm.expect(jsonData.length).to.be.above(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/products",
+					"host": ["{{base_url}}"],
+					"path": ["api", "products"]
+				}
+			}
+		},
+		{
+			"name": "TC_API_02 - Thêm sản phẩm vào giỏ hàng (POST)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code là 200 OK', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Trả về message xác nhận và cartId hợp lệ', function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.eql('Đã thêm vào giỏ hàng');",
+							"    pm.expect(jsonData.cartId).to.be.a('string');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"productId\": 1,\n  \"quantity\": 2\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/cart",
+					"host": ["{{base_url}}"],
+					"path": ["api", "cart"]
+				}
+			}
+		},
+		{
+			"name": "TC_API_03 - Thanh toán thành công (POST - Valid Payload)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code là 200 OK', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Sinh mã đơn hàng OrderID thành công', function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.orderId).to.include('ORD_');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"cartId\": \"CART_ACTIVE\",\n  \"customerName\": \"Nguyen Van A\",\n  \"address\": \"Hanoi, Vietnam\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/checkout",
+					"host": ["{{base_url}}"],
+					"path": ["api", "checkout"]
+				}
+			}
+		},
+		{
+			"name": "TC_API_04 - Thanh toán thất bại do thiếu tên (POST - Boundary Test)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code là 400 Bad Request', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test('Báo lỗi tên ngắn/rỗng đúng quy định', function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.error).to.eql('Tên khách hàng phải từ 2 ký tự trở lên');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"cartId\": \"CART_ACTIVE\",\n  \"customerName\": \"A\",\n  \"address\": \"Hanoi\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/checkout",
+					"host": ["{{base_url}}"],
+					"path": ["api", "checkout"]
+				}
+			}
+		}
+	]
+}
