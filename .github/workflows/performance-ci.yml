@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Launch App via Docker Compose
       run: |
@@ -54,7 +54,7 @@ jobs:
         k6 run tests/k6_load_test.js
 
     - name: Upload HTML Performance Report Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: k6-performance-report
