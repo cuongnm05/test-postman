@@ -16,7 +16,7 @@ jobs:
 
     - name: Launch App via Docker Compose
       run: |
-        docker-compose up --build -d
+        docker compose up --build -d
         sleep 5
 
     # KIỂM THỬ API BẰNG POSTMAN NEWMAN CLI
@@ -63,4 +63,4 @@ jobs:
     - name: Teardown Environment
       if: always()
       run: |
-        docker-compose down
+        docker compose down
