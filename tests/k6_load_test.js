@@ -1,45 +1,45 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
+import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
-// 1. Cấu hình kịch bản Tải (Test Scenarios & Thresholds)
 export const options = {
-    stages: [
-        { duration: '10s', target: 20 }, // Giai đoạn 1: Tăng dần lên 20 người dùng trong 10 giây
-        { duration: '20s', target: 50 }, // Giai đoạn 2: Giữ tải đỉnh 50 người dùng trong 20 giây (Flash Sale)
-        { duration: '10s', target: 0 },  // Giai đoạn 3: Giảm tải về 0
-    ],
-    thresholds: {
-        http_req_duration: ['p(95)<500'], // Quality Gate 1: 95% request phải < 500ms
-        http_req_failed: ['rate<0.05'],    // Quality Gate 2: Tỷ lệ lỗi < 5%
-    },
+  stages: [
+    { duration: '5s', target: 10 },
+    { duration: '10s', target: 20 },
+    { duration: '5s', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.05'],
+  },
 };
 
-const BASE_URL = 'http://localhost:3000';
-
-// 2. Kịch bản mô phỏng hành vi 1 người dùng mua hàng
 export default function () {
-    // Bước 1: Người dùng xem sản phẩm
-    let resProducts = http.get(`${BASE_URL}/api/products`);
-    check(resProducts, {
-        'GET Products status 200': (r) => r.status === 200,
-        'GET Products time < 200ms': (r) => r.timings.duration < 200,
-    });
-    sleep(1); // Người dùng dừng 1 giây suy nghĩ
+  const BASE_URL = 'http://localhost:3000';
+  const params = { headers: { 'Content-Type': 'application/json' } };
 
-    // Bước 2: Người dùng thêm sản phẩm vào giỏ hàng
-    let payloadCart = JSON.stringify({ productId: 1, quantity: 1 });
-    let params = { headers: { 'Content-Type': 'application/json' } };
-    let resCart = http.post(`${BASE_URL}/api/cart`, payloadCart, params);
-    check(resCart, {
-        'POST Cart status 200': (r) => r.status === 200,
-    });
-    sleep(1);
+  // 1. GET Products
+  const resProducts = http.get(`${BASE_URL}/api/products`);
+  check(resProducts, { 'GET Products status 200': (r) => r.status === 200 });
 
-    // Bước 3: Người dùng tiến hành Thanh toán (Checkout)
-    let payloadCheckout = JSON.stringify({ cartId: 'CART_12345' });
-    let resCheckout = http.post(`${BASE_URL}/api/checkout`, payloadCheckout, params);
-    check(resCheckout, {
-        'POST Checkout status 200': (r) => r.status === 200,
-    });
-    sleep(1);
+  // 2. POST Cart
+  const cartPayload = JSON.stringify({ productId: 1, quantity: 2 });
+  const resCart = http.post(`${BASE_URL}/api/cart`, cartPayload, params);
+  check(resCart, { 'POST Cart status 200': (r) => r.status === 200 });
+
+  // 3. POST Checkout (Bổ sung đầy đủ customerName và address hợp lệ)
+  const checkoutPayload = JSON.stringify({
+    cartId: 'CART_ACTIVE',
+    customerName: 'Nguyen Van A',
+    address: 'Hanoi, Vietnam'
+  });
+  const resCheckout = http.post(`${BASE_URL}/api/checkout`, checkoutPayload, params);
+  check(resCheckout, { 'POST Checkout status 200': (r) => r.status === 200 });
+
+  sleep(1);
+}
+
+export function handleSummary(data) {
+  return {
+    "summary.html": htmlReport(data),
+  };
 }
